@@ -6,8 +6,10 @@
 *_cache/
 *_files/
 unnamed-chunk*
-.Rhistory
+*.Rhistory
 .Rproj.user
+*.png
+*.RData
 
 # Files to not ignore
 !/.gitignore
