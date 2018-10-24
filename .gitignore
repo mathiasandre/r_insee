@@ -1,4 +1,4 @@
-# Ignore everything in repository root 
+# Ignore everything in repository root
 /*
 \#old/
 \#archives/
@@ -13,7 +13,7 @@ unnamed-chunk*
 !/.gitignore
 !/donnees
 !/initiation
+!/formation_R
 !/perf
 !/LICENSE
 !/README.md
-
