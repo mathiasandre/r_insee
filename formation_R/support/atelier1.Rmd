@@ -1,0 +1,684 @@
+---
+title: "Atelier 1 - Découverte et prise en main"
+output: 
+  html_document: 
+    highlight: haddock
+    number_sections: yes
+---
+
+```{r, include = FALSE}
+rm(list = ls())
+if(!exists(".initOK")) source("init.R", encoding = "latin1")
+.init()
+```
+
+```{r, results = "asis", echo = FALSE}
+.module(numModule = 1, "Atelier 1 - Découverte et prise en main")
+```
+
+```{r, results = "asis", echo = FALSE}
+.partie("Un peu d'histoire et quelques grands principes")
+```
+
+
+R est un langage utilisé pour le traitement de données statistiques créé au début des années 1990 par deux chercheurs de l'université d'Auckland, Ross Ihaka and Robert Gentleman. Il reprend de très nombreux éléments du langage S créé par le statisticien américain John Chambers à la fin des années 1970 au sein des [laboratoires Bell](https://fr.wikipedia.org/wiki/Laboratoires_Bell).
+
+La première version stable a été rendue publique en 2000 : d'abord principalement diffusé parmi les chercheurs et les statisticiens "académiques", R est aujourd'hui **de plus en plus utilisé au sein des Instituts nationaux de statistiques**.
+
+* Quelques dates : 
+    + 1991 : Naissance de R
+    + 1993 : Première version
+    + 1995 : R devient libre
+    + 1997 : Création d'un groupe de développeurs pour travailler sur R
+    + 2000 : R 1.0.0
+    + 2004 : R 2.0.0
+    + 2011 : [RStudio](www.rstudio.com)
+    + 2013 : R 3.0.0
+    + 2015 : Création du *R Consortium*
+
+* Évolution du nombre de *packages* dans le temps : 
+    + 12 000 en 2017 sur *The Comprehensive R Archive Network* 
+    + disponibles par exemple sur https://cran.univ-paris1.fr/
+
+```{r, results = "asis", echo=FALSE}
+packages<-read.table("/Users/iMathias/Documents/Taf/GitHub/r_insee/drees/bases/packages_r.csv", sep=";", header=T)
+library(ggplot2)
+packages$date<-as.factor(packages$date)
+
+ggplot(packages, aes(x=date, y=nb_cum, group=date))+
+      geom_point()+
+      geom_line(aes(group=1))+
+      xlab("")+
+      ylab("Nombre de packages")+
+      scale_y_continuous(breaks = seq(0, 12000, 1000))
+```
+
+
+```{r, results = "asis", echo = FALSE}
+.souspartie("R : un logiciel libre")
+```
+
+
+À la différence d'autres logiciels de traitement statistique (SAS, SPSS ou Stata notamment), R est un **logiciel libre** : sa licence d'utilisation est gratuite et autorise chaque utilisateur à **accéder, modifier ou redistribuer son [code source](https://github.com/wch/r-source)**. En pratique, il est maintenu par une équipe (la *[R Core Team](https://www.r-project.org/contributors.html)*) qui veille à la stabilité du langage et de ses implémentations logicielles.
+
+Une des conséquences de cette philosophie "libre" présente dès les premières années du développement du langage est le rôle qu'y jouent les **modules complémentaires**, ou ***packages***. Au-delà des "briques" fondamentales de la *R Core Team*, **plusieurs milliers de *packages* sont disponibles et librement téléchargeables** *via* le [*Comprehensive R Archive Network*](https://cran.r-project.org/) (ou CRAN) ou encore par le biais de plate-formes de développement collaboratif comme [GitHub](https://github.com/). Ces *packages*, dont l'installation est particulièrement simple dans R, enrichissent considérablement les fonctionnalités du logiciel et sont une de ses principales forces.
+
+------------
+
+**Remarque importante** Comme de nombreux logiciels libres, R est très influencé par le fonctionnement du système d'exploitation Linux. À ce titre, **certains éléments de sa syntaxe peuvent dérouter un utilisateur de Windows** :
+
+- **R est sensible à la casse** : il distingue ainsi `matable` de `MATABLE` ou encore de `maTable`, même sous Windows (contrairement à SAS notamment) ;
+- **dans R les chemins doivent utiliser des `/` et non des `\`** : ainsi, pour pointer vers le dossier `V:\enquete\donnees` il faut saisir dans R `V:/enquete/donnees`.
+- Avec un système d'exploitation Mac, cela ne pose pas de problème (avec la racine Unix, les chemins utilisent déjà des `/`).
+
+------------
+
+```{r, results = "asis", echo = FALSE}
+.souspartie("R : un langage très utilisé")
+```
+
+* Il est évolutif grâce aux *packages* que chacun peut construire et qui s'installent à la volée
+* 5éme langage le plus utilisé dans le monde (derrière C, Java, Python et C++), le 2ème plus utilisé par les *data scientists*
+* R a une grosse communauté : 177 000 questions posées sur StackOverflow (dont surement la vôtre)
+* De nombreuses ressources sur Internet : 214 000 000 résultats à `R Stat` sur Google (contre 721 000 pour `SAS Stat`)
+* Site de référence : [www.r-project.org](https://www.r-project.org/)
+
+Ses **principaux points forts** sont :
+
+* R peut tout faire en statistique, il est rapide et souple.
+* La documentation est riche, accessible et compréhensible (en ligne et par défaut).
+* La gestion des erreurs est logique et efficace.
+* R, c'est un seul logiciel pour de nombreux usages (ce document est fait à partir de R).
+* R fait des graphiques attractifs et possiblement dynamiques.
+* R est très utilisé pour les projets *Big data*
+
+R est introduit petit à petit à l'Insee et dans les SSM. Son apprentissage est plus facile que d'autres logiciels statistiques. Un point qui peut être déroutant pour le débutant est qu'il existe souvent plusieurs solutions pour faire la même chose.
+
+```{r, results = "asis", echo = FALSE}
+.souspartie("\"Tout ce qui existe est un objet\"")
+```
+
+De manière plus générale, le fonctionnement de R est **plus proche de celui d'un langage de programmation "classique"** (Python, C, Java, etc.) **que de celui des autres logiciels de traitements statistiques**. Une manière d'introduire cet aspect fondamental du logiciel est de développer la **célèbre citation de John Chambers**: 
+
+> *To understand computations in R, two slogans are helpful:*
+>
+> - *Everything that exists is an object.*
+>
+> - *Everything that happens is a function call.*
+>
+> *John Chambers*
+
+Tout ce qui existe et est manipulable dans R est un **objet** identifié par son nom et par son **environnement de référence**. Par défaut, tous les objets créés par l'utilisateur apparaissent dans l'environnement dit "global" (`.GlobalEnv`) qui est implicite, de façon analogue à la bibliothèque `WORK` de SAS.
+
+Pour créer un objet, la méthode la plus simple consiste à assigner une valeur à un nom avec l'opérateur `<-``r .fun("<-", bold = TRUE)`. Par exemple :
+
+```{r, collapse = TRUE}
+a <- 4
+```
+
+assigne la valeur 4 à l'objet `a` (dans l'environnement global). Dès lors, il est possible d'afficher la valeur de `a` et de la **réutiliser dans des calculs** :
+
+```{r, collapse = TRUE}
+# Affichage de la valeur de a avec la fonction print() ...
+print(a)
+
+# ... ou tout simplement en tapant son nom
+a
+
+# Utilisation de a dans un calcul
+2 * a
+
+# Définition et utilisation de b
+b <- 6
+a * b
+```
+
+Il est bien sûr possible d'assigner à un nom **non pas une valeur numérique unique** (comme ici 4 à `a` et 6 à `b`) **mais des données provenant d'une table externe**. 
+
+**Exemple** Le code suivant associe à l'objet `reg` les caractéristiques des régions dans le [Code officiel géographique](https://www.insee.fr/fr/information/2666684) (COG) au 1er janvier 2017.
+
+`r .fun("read.delim")`
+```{r}
+# Lecture du fichier du COG contenant le nom des régions
+# et stockage dans l'objet dont le nom est `reg`
+reg <- read.delim("reg2017.txt")
+```
+
+```{r, eval=FALSE}
+# Affichage de l'objet reg
+reg
+```
+```{r, echo=FALSE}
+reg[, -5]
+```
+
+
+Dans tous les cas, les objets créés sont **stockés dans la mémoire vive de l'ordinateur** (comme dans Stata), ce qui présente des avantages et des inconvénients :
+
+- (+) on ne modifie jamais les fichiers originaux, uniquement les objets chargés en mémoire ;
+- (+) les opérations sur les objets chargés peuvent être **extrêmement rapides**, car elles ne nécessitent pas de lire des données sur le disque ;
+- (-) à chaque lancement de R il faut **recharger les données nécessaires en mémoire** ;
+- (-) la **taille totale des données chargées ne peut pas excéder celle de la mémoire vive installée**.
+
+
+```{r, results = "asis", echo = FALSE}
+.souspartie("\"Tout ce qui se produit est un appel de fonction\"")
+```
+
+Une fois les objets sur lesquels on souhaite travailler créés (*i.e.* les tables importées), R dispose d'un grand nombre de **fonctions** pour transformer ces données et mener à bien des traitements statistiques. **Dans R une fonction est un type d'objet particulier** : une fonction est identifiée par son nom (dans un environnement de référence) suivi de parenthèses.
+
+**Exemple** La fonction `ls()``r .fun("ls")` (sans argument) permet d'afficher les objets chargés en mémoire.
+
+```{r}
+# Affichage des objets chargés en mémoire avec ls()
+ls()
+```
+
+Il y a pour l'instant trois objets en mémoire : `a`, `b` et `reg`. 
+
+**Progresser dans la maîtrise de R signifie essentiellement étendre son "vocabulaire" de fonctions connues**. Avec le temps, il est fréquent que l'on revienne sur d'anciens codes pour les simplifier en utilisant des fonctions découvertes entre temps (ou parfois en exploitant mieux les mêmes fonctions !).
+
+**Il est également extrêmement facile et courant dans R de créer ses propres fonctions**.
+
+**Exemple** La fonction `monCalcul()` renvoie le résultat de `param1 * 10 + param2`, où `param1` et `param2` sont deux nombres.`r .fun("function", bold = TRUE)`
+
+```{r}
+# Définition de la fonction monCalcul()
+monCalcul <- function(param1, param2){
+  resultat <- param1 * 10 + param2
+  return(resultat)
+}
+
+# Test de la fonction monCalcul() avec les valeurs 1 et 3
+monCalcul(1, 3)
+
+# Test de la fonction monCalcul() avec les valeurs a et 2
+a
+monCalcul(a, 2)
+```
+
+Quand on saisit uniquement le **nom de la fonction (sans parenthèse)**, R affiche son code :
+```{r}
+# Affichage du code de la fonction monCalcul()
+monCalcul
+```
+
+À noter que **rien ne distingue les fonctions pré-chargées dans le logiciel** (comme `read.delim()` ou `ls()` utilisées précédemment) **des fonctions créées par l'utilisateur**. Il est ainsi tout à fait possible d'afficher le code de ces fonctions.`r .fun("read.delim")`
+```{r}
+# Affichage du code de la fonction read.delim()
+read.delim
+```
+
+C'est une **conséquence du caractère "libre" du logiciel** : non seulement le code des fonctions pré-chargées est consultable, mais il est également modifiable.
+
+Cet exemple illustre la **très grande souplesse de R comme langage** : tous ses aspects sont modifiables, si bien qu'il est possible de **développer facilement des programmes R parfaitement adaptés aux besoins les plus spécifiques**.
+
+```{r, results = "asis", echo = FALSE}
+.partie("Découverte de l'interface")
+```
+
+```{r, echo = FALSE}
+rm(list=ls())
+```
+
+En tant que tel, R est un *langage* susceptible d'être implémenté dans de [nombreuses interfaces](https://fr.wikipedia.org/wiki/R_(langage)#Interfaces). Le choix est fait ici de présenter d'abord son **implémentation minimale** (en mode "console") puis une **implémentation beaucoup plus complète** par le biais du programme [RStudio](https://www.rstudio.com/). Dans tous les cas, la plate-forme utilisée est Windows.
+
+```{r, results = "asis", echo = FALSE}
+.souspartie("Effectuer des manipulations de base dans la console")
+```
+
+Par défaut sous Windows, R est fourni avec une interface graphique minimiale (`Rgui.exe`), dont la fenêtre principale est une **console**, c'est-à-dire un **terminal** dans lequel taper des instructions (comparable à l'invite de commandes Windows). Les instructions sont à taper après le signe `>` en rouge.
+
+![Interface fenêtrée de R sous Windows](../figures/fenetre.png)
+
+
+Pour exécuter du code, deux solutions existent : 
+
+1. écrire le code dans la console et appuyer sur `Entrée`
+
+2. écrire le code dans la fenétre de script, le sélectionner (ou se placer en fin de ligne) et appuyer sur `Ctrl + R` (ou sur le bouton d'exécution).
+
+Les résultats s'affichent automatiquement dans la console. Dans le cas de graphiques, une nouvelle fenêtre s'ouvre.
+
+Toutes les commandes peuvent être passées au logiciel par le biais de la console, même si **en pratique les commandes les plus longues sont stockées et soumises depuis un fichier de script** (*cf.* la sous-partie suivante). En particulier, il est fréquent d'effectuer dans la console:
+
+- **des assignations et des rappels de valeur** : le signe `<-` permet d'assigner des valeurs à des noms pour être réutilisées ultérieurement. Quand une valeur est assignée à un nom, il suffit de taper le nom dans la console pour afficher la valeur.
+
+- **des opérations sur les objets en mémoire** :
+    + la fonction `ls()``r .fun("ls", bold = TRUE)` affiche tous les objets en mémoire ;
+    + la fonction `str(a)``r .fun("str", bold = TRUE)` affiche les caractéristiques (ou encore la *structure*) de l'objet `a` (son type, sa longueur, etc.) ;
+    + la fonction `rm(a)``r .fun("rm", bold = TRUE)` supprime l'objet `a`.
+    
+- **des requêtes pour l'aide** : pour afficher l'aide sur une fonction dont le nom est `maFonction`, il suffit d'utiliser `help(maFonction)``r .fun("help", bold = TRUE)` ou plus simplement `? maFonction``r .fun("?", bold = TRUE)`.
+
+- **des opérations simples** : le tableau ci-dessous présente quelques opérations arithmétiques et les symboles correspondant en R.
+
+    Code R     | Résultat
+    ------------- | -------------
+    `a + b``r .fun("+", bold = TRUE)`       | Somme de a et b
+    `a - b``r .fun("-", bold = TRUE)`       | Soustraction de b à a
+    `a * b``r .fun("*", bold = TRUE)`       | Produit de a et b
+    `a / b``r .fun("/", bold = TRUE)`       | Division de a par b
+    `a ^ b``r .fun("\\textasciicircum", bold = TRUE)`    | a puissance b
+    `a %/% b``r .fun("\\%/\\%", bold = TRUE)`   | Quotient de la division euclidienne de a par b
+    `a %% b``r .fun("\\%\\%", bold = TRUE)`    | Reste de la division euclidienne de a par b
+    `sqrt(a)``r .fun("sqrt", bold = TRUE)`     | Racine carrée de a
+
+
+```{r, results = "asis", echo = FALSE}
+.question("Convertir une durée de secondes en minutes-secondes")
+```
+Il est souvent très utile de mesurer et d'afficher la durée d'un traitement un peu long (script exécuté régulièrement par exemple). La fonction `system.time()``r .fun("sys.time", bold = TRUE)` de R n'affiche néanmoins que le temps écoulé en *secondes*, ce qui n'est guère lisible. **L'objectif de ce cas pratique est de convertir une durée de secondes en minutes-secondes**.
+
+a. On lance le programme R (et à ce stade, ce n'est pas l'interface RStudio).
+
+b. Dans la console, on associe la valeur 2456 à l'objet `duree`.  C'est sur cette durée (en secondes) que vont porter tous les calculs. Une fois assignée, rappelez la valeur de `duree` dans la console.`r .fun("<-")`
+
+    ```{r, results = "asis", echo = FALSE}
+    .beginsol()
+    ```
+    ```{r}
+    # Note : Pour copier-coller les éléments de solution,
+    # vous pouvez utiliser les raccourcis clavier Ctrl + C
+    # (copier) et Ctrl + V (coller).
+    
+    # Pour assignez une valeur à un objet, on utilise l'opérateur <-
+    duree <- 2456
+    # Pour soumettre une opération en mode console, il suffit d'appuyer
+    # sur ENTREE.
+    
+    # Dès lors qu'une valeur est assignée à un objet, il suffit de taper
+    # le nom de l'objet dans la console pour rappeler sa valeur :
+    duree
+    ```
+    ```{r, results = "asis", echo = FALSE}
+    .endsol()
+    ```
+
+c. On calcule le nombre de minutes correspondant à la valeur de `duree` (*cf.* le tableau des opérations arithmétiques). On associe cette valeur à l'objet `min`.`r .fun("/")``r .fun("\\%/\\%")`
+
+    ```{r, results = "asis", echo = FALSE}
+    .beginsol()
+    ```
+    ```{r}
+    # Pour obtenir le nombre de minutes dans duree, il suffit de
+    # diviser par 60 :
+    duree / 60
+    # Néanmoins, pour obtenir un nombre entier de minutes, il faut utiliser
+    # la division euclidienne (cf. tableau)
+    duree %/% 60
+    # On stocke le nombre de minutes dans l'objet min avec <-
+    min <- duree %/% 60
+    min
+    ```
+    ```{r, results = "asis", echo = FALSE}
+    .endsol()
+    ```
+
+d. On calcule le nombre de secondes restantes une fois le nombre de minutes déterminé (la flèche $\uparrow$ du clavier permet de rappeler et modifier le code que vous venez de soumettre). On associe cette valeur à l'objet `sec`.`r .fun("\\%\\%")`
+
+    ```{r, results = "asis", echo = FALSE}
+    .beginsol()
+    ```
+    ```{r}
+    # Calculer le nombre de secondes restantes revient à calculer
+    # le reste de la division euclidienne de duree par 60 : c'est ce
+    # que fait l'opérateur %% (cf. tableau).
+    duree %% 60
+    # A nouveau, on rappelle le code saisi précédemment avec la flèche
+    # HAUT du clavier et on associe la valeur à l'objet sec avec l'opérateur <-.
+    sec <- duree %% 60
+    sec
+    ```
+    ```{r, results = "asis", echo = FALSE}
+    .endsol()
+    ```
+
+e. On utilise la fonction `paste()``r .fun("help")``r .fun("?")``r .fun("paste")` afin d'afficher du texte et les valeurs d'objets : 
+    ```{r, eval = FALSE}
+paste("La durée est de", duree, "secondes.")
+    ``` 
+    En utilisant tous ces éléments, afficher dans la console le texte :
+    ```{r, echo = FALSE, comment = ""}
+"Le traitement a duré 40 minutes et 56 secondes."
+    ```
+    
+    ```{r, results = "asis", echo = FALSE}
+    .beginsol()
+    ```
+    ```{r, eval = FALSE}
+    # Pour consulter l'aide de R, il suffit d'utiliser la fonction help()
+    # avec entre parenthèses le nom de la fonction sur laquelle on souhaite
+    # obtenir de l'aide. 
+    help(paste)
+    # On peut aussi plus simplement utiliser ? :
+    ? paste
+    # Un navigateur s'ouvre alors pour afficher la page d'aide de la fonction.
+    # On y apprend que cette fonction sert à concaténer des "vecteurs".
+
+    paste("La durée est de", duree, "secondes.")
+    
+    # Ce code produit une chaîne de caractère : les chaînes de texte
+    # (entre "") sont reproduites telles quelles mais l'objet `duree`
+    # est remplacé par sa valeur. Les différents arguments de la fonction
+    # paste() sont séparés par des virgules.
+    
+    # Pour répondre à la question, il suffit donc d'utiliser les objets
+    # `min` et `sec` définis précédemment comme arguments de la fonction paste() :
+    paste("Le traitement a duré", min, "minutes et", sec, "secondes.")
+    ```
+    ```{r, results = "asis", echo = FALSE}
+    .endsol()
+    ```
+
+
+```{r, results = "asis", echo = FALSE}
+.souspartie("Utilisation de l'interface RStudio")
+```
+
+Quoique toutes les fonctionnalités de R soient accessibles en mode console, ce type d'interface présente l'inconvénient majeur de **ne pas permettre de garder facilement une trace du code saisi** (sinon par le biais de l'historique des commandes accessible par $\uparrow$). Pour combler ce manque, les différentes interfaces graphiques de R permettent d'utiliser des **scripts** au format `.R`, à l'image des éditeurs de SAS (fichiers `.sas`) ou des *do-file* de Stata (fichiers `.do`).
+
+En particulier, l'environnement de développement **RStudio** propose de nombreuses fonctionnalités qui **rendent l'utilisation de R beaucoup plus simple et intuitive** : explorateur d'environnements, colorisation et auto-complétion du code, afficheur de fenêtres d'aide et de résultats, etc.
+
+![Interface fenêtrée de **RStudio** sous Windows](../figures/rstudio_0.png)
+
+À l'ouverture de **RStudio**, en règle générale trois panneaux sont visibles :
+
+- La **console** (à gauche par défaut) : la principale différence avec précédemment tient à la couleur du texte, noire pour les messages et bleue pour le signe `>`. Pour vider l'intégralité de la console, taper `Ctrl + L`.
+- L'**explorateur d'environnements et l'historique** (en haut à droite par défaut) : l'explorateur d'environnements permet notamment d'afficher, comme la fonction `ls()`, les objets présents dans l'environnement de travail (ou "environnement global"); comme la touche $\uparrow$ dans la console, l'historique rappelle toutes les commandes saisies.
+- La **fenêtre de visualisation** (en bas à droite par défaut) : ce panneau intègre à la fenêtre du logiciel l'aide ou encore les graphiques produits.
+
+En appuyant sur "Nouveau" > "Script R" (bouton entouré en rouge dans la figure précédente), les fenêtres se réorganisent pour faire apparaître une zone de texte : l'**éditeur de script**.
+
+![Interface fenêtrée de **RStudio** sous Windows -- Pendant une session de travail](../figures/rstudio_1.png)
+
+L'utilisation de l'éditeur de scripts sous **RStudio** est analogue à celle de l'éditeur sous SAS ou du *do-file editor* de Stata :
+
+- il est possible d'**enregistrer** et d'**ouvrir un script** avec les boutons de la barre d'outils correspondants. Le format d'enregistrement par défaut est `.R`, mais le fichier est directement lisible par n'importe quel éditeur de texte (bloc-note ou Notepad++ sous Windows par exemple) ;
+- pour **soumettre une ou plusieurs lignes de code**, il suffit de les sélectionner et de saisir au clavier **Ctrl\ +\ R** ou **Ctrl\ +\ Entrée** ;
+- les **éléments de syntaxe apparaissent en couleur** : les commentaires (précédés de `#` à chaque ligne) en vert clair, les objets en noir, les nombres en bleu et les chaînes de caractère (entre `""` ou `''`) en vert foncé. Pour **commenter plusieurs lignes de code simultanément**, il suffit d'utiliser le raccourci **Ctrl\ +\ Maj\ +\ C**;
+- des **suggestions apparaissent au cours de la frappe** : quand **RStudio** détecte le début du nom d'un objet déjà défini (par exemple une fonction), il fournit des **propositions d'auto-complétion**. Le logiciel double également automatiquement les guillemets et les parenthèses.
+
+```{r, results = "asis", echo = FALSE}
+.partie("Charger et explorer des données")
+```
+
+
+**Explorer des données statistiques avec R est relativement intuitif**, en particulier grâce aux fonctionnalités de RStudio : affichage des objets chargés en mémoire, explorateur d'objets, auto-complétion. **Manipuler des données exige en revanche une plus grande maîtrise des briques élémentaires du langage** que nous aborderons plus tard.
+
+
+R travaille sur des **objets stockés en mémoire** : pour explorer des données, la première étape consiste donc à les **charger en mémoire depuis leur emplacement sur le disque dur de l'ordinateur**. On utilise en général pour ce faire la **fonction `load()`**`r .fun("load", bold = TRUE)`: 
+
+```{r, eval=FALSE}
+# Chargement des données du fichier module1.RData
+load("/Users/iMathias/Documents/Taf/GitHub/r_insee/drees/bases/module1.RData")
+# NOTE : DANS R LES CHEMINS SONT INDIQUES AVEC DES / ET NON DES \
+```
+```{r, echo=FALSE}
+load("module1.RData")
+```
+
+**La fonction `load()` charge dans l'environnement de travail les objets contenus dans le fichier `module1.RData`** en les décompressant au passage (par défaut les fichiers saugevardés par R sont compressés). L'environnement de travail comporte désormais deux nouveaux objets :
+
+```{r}
+# Fichiers présents dans l'environnement de travail
+ls()
+
+# Caractéristiques de l'objet bpe
+str(bpe)
+```
+
+**L'objet `bpe` correspond à une extraction de la [Base permanente des équipements 2015](https://www.insee.fr/fr/statistiques/2410933) restreinte aux équipements de la ville de Malakoff (code Insee 92046)**. La nomenclature des équipements est présentée sur [cette page](https://www.insee.fr/fr/statistiques/2578377).
+
+Pour parcourir ce fichier dans **RStudio**, il suffit de **cliquer sur son nom dans l'explorateur d'environnements**. Plusieurs manipulations peuvent par ailleurs être effectuées de façon relativement intuitive comme le montre l'exemple suivant.
+
+```{r, results = "asis", echo = FALSE}
+.question("Charger et explorer des données : Le recensement de la population 2013 dans les Hauts-de-Seine")
+```
+Ce cas pratique vise à charger et à effectuer **quelques manipulations simples sur une extraction du fichier du recensement de la population (RP) 2013 dans les Hauts-de-Seine** (accessible sur le [site de l'Insee](https://www.insee.fr/fr/statistiques/2409491)). Les données ont été préalablement téléchargées et converties et sont contenues dans le fichier `module1.RData`.
+
+a. Utilisez la fonction `load()``r .fun("load")` pour charger les données contenues dans le fichier `module1.RData` (en n'oubliant pas le chemin du répertoire où le ficher se trouve). **Pensez à bien utiliser des `/` et non des `\` dans le chemin du fichier** (sans quoi le chargement ne fonctionnera pas). Affichez les caractéristiques de l'objet `rp` : combien ce fichier comporte-t-il d'observations et de variables ? Affichez ses premières lignes.`r .fun("head")` et les dernières lignes avec la fonction `r .fun("tail")` :
+
+    ```{r, results = "asis", echo = FALSE}
+    .beginsol()
+    ```
+    ```{r, eval=FALSE}
+    # Chargement du fichier exemples.RData
+  load("/Users/iMathias/Documents/Taf/GitHub/r_insee/drees/bases/module1.RData")
+    # NOTE : DANS R LES CHEMINS SONT INDIQUES AVEC DES / ET NON DES /
+    ```
+    ```{r, echo=FALSE}
+    load("module1.RData")
+    ```
+    ```{r}
+    # Objets présents dans l'environnement de travail
+    ls()
+    
+    # Caractéristiques de l'objet rp
+    str(rp)
+    # Le fichier rp comporte 609 446 observations et 6 variables
+    
+    # Pour afficher les premières lignes d'une table, on utilise
+    # la fonction head()
+    head(rp)
+    # et tail() pour les dernières
+    tail(rp)
+    ```
+    ```{r, results = "asis", echo = FALSE}
+    .endsol()
+    ```
+
+b. Utilisez l'opérateur `$``r .fun("\\$")` pour afficher les valeurs de la variable de pondération `IPONDI`. Pensez à bien respecter la casse du nom de la variable. Appliquez la fonction `sum()``r .fun("sum")` à la variable `IPONDI` pour déterminer la population totale des Hauts-de-Seine au sens du RP 2013 (*i.e.* calculer la somme de la variable `IPONDI`).
+
+    ```{r, results = "asis", echo = FALSE}
+    .beginsol()
+    ```
+    ```{r, eval = FALSE}
+    # Affichage du contenu de la variable IPONDI
+    rp$IPONDI
+    # Note : pour des raisons de présentation, seules les 20 premières valeurs
+    # sont affichées ici.
+    ```
+    
+    ```{r, echo = FALSE}
+    rp$IPONDI[1:20]
+    ```
+    
+    ```{r}
+    sum(rp$IPONDI)
+    # La population des Hauts-de-Seine au sens du RP 2013 est de
+    # 1 591 365 habitants.
+    ```
+    ```{r, results = "asis", echo = FALSE}
+    .endsol()
+    ```
+
+c. Affichez les modalités distinctes de la variable `SEXE``r .fun("unique")`. Appliquez la fonction `table()``r .fun("table")` à cette variable pour déterminer la répartition par sexe des individus recensés. Utilisez la fonction `barplot()``r .fun("barplot")` pour représenter cette répartition. Utilisez la fonction `summary()``r .fun("summary")` pour avoir quelques statistiques descriptives de la variable `ANAI``r .fun("unique")` :
+
+    ```{r, results = "asis", echo = FALSE}
+    .beginsol()
+    ```
+    ```{r}
+    # Pour afficher les modalités distinctes d'une variable, on utilise
+    # la fonction unique()
+    unique(rp$SEXE)
+    # Comme souvent, le sexe est codé par un chiffre, "1" pour
+    # les hommes et "2" pour les femmes.
+    table(rp$SEXE)
+    # La fonction table() permet d'effectuer une tabulation
+    # simple (et non pondérée) d'une variable
+    
+    # Pour représenter cette répartition, il suffit d'utiliser la fonction
+    # barplot() avec comme données le résultat de la fonction table()
+    barplot(
+      table(rp$SEXE)
+      , main = "Sexe des individus recensés au RP 2013"
+    )
+    
+    # Quelques statistiques sur l'année de naissance
+    summary(rp$ANAI)
+    ```
+    ```{r, results = "asis", echo = FALSE}
+    .endsol()
+    ```
+
+------
+
+**Remarque** D'un point de vue technique, **l'objet `rp` est de type `data.frame`**, qui correspond au format le plus fréquent pour les tables de données dans R. Ce type d'objet est **relativement complexe et est présenté en détails dans la suite de la formation**.
+
+------
+
+```{r, results = "asis", echo = FALSE}
+.partie("Importer des données à l'aide de *packages*")
+```
+
+
+En règle générale, les fichiers de données sur lesquels on souhaite travailler ne sont pas en format R natif : il convient donc de les **importer**. **R dispose de très nombreuses fonctions pour importer des données provenant d'autres logiciels** (notamment SAS). Toutes ne sont cependant pas chargées par défaut au démarrage du logiciel, mais sont facilement accessibles par le biais de *packages*.
+
+Chaque *package* possède une aide et une documentation, disponible sur sa page. On peut y accéder en tapant `nom de package + CRAN` dans Google.
+
+Une des principaux avantages de R est de disposer d'un très grand nombre de *packages* complémentaires (`r formatC(dim(available.packages())[1],big.mark = "\\ ")` au `r format(Sys.Date(), "%d/%m/%Y")`) très faciles à installer. Pour installer un package, il suffit en effet de saisir: 
+
+```{r, eval=FALSE}
+# Installation du package haven
+install.packages("haven")
+# Remarque : À ne faire qu'une seule fois
+```
+Il est aussi possibl de les installer en :
+        - téléchargeant le fichier en .zip et installer en local (non recommandé car sans les dépendances)
+        - utilisant RStudio via `Tools / Install Packages `
+
+Ils s'utilisent en les chargeant à chaque session par la commande `library(nom du package)`.
+
+------
+
+**Remarque** Lors de l'installation d'un package, il arrive qu'une **fenêtre apparaisse pour demander de choisir un "miroir" pour le téléchargement des fichiers**. Comme pour la plupart des logiciels libres, les éléments constitutifs de R ne sont pas disponibles sur un seul serveur mais sur une multitude de serveurs identiques (d'où le nom "miroir"), en général maintenus par des universités ou des institutions de recherche. N'importe quel "miroir" peut donc faire l'affaire, mais il est courant de privilégier le serveur le plus proche géographiquement (plusieurs miroirs sont situés à Paris).
+
+Si nécessaire, le programme télécharge et installe également, en plus du *package* demandé, l'ensemble des **dépendances** indispensables à son fonctionnement. **Il est en effet fréquent qu'un *package* s'appuie sur des fonctionnalités proposées par d'autres *packages* non pré-installés par défaut**. Pour connaître la liste des dépendances d'un *package*, il suffit de consulter les rubriques *Depends* et *Imports* de sa page de référence sur le *Comprehensive R Archive Network* (CRAN). Par exemple pour le *package* `haven` : https://CRAN.R-project.org/package=haven
+
+On va prendre comme exemple l'**importation d'autres données de la Base permanente des équipements** (relatives à Montrouge, code Insee 92049) **et stockées dans différents formats** (`bpe2.csv`, `bpe2.sas7bdat`). 
+
+------
+
+**Remarque** Pour faciliter l'import de plusieurs fichiers, on modifie le **répertoire de travail** (*working directory*) **de R** : il s'agit du répertoire dans lequel le logiciel **recherche par défaut les fichiers sur lesquels travailler**. Une fois le répertoire de travail convenablement défini (avec la fonction `setwd()``r .fun("setwd", bold = TRUE)`), il suffit de saisir le nom du fichier à importer pour que R le trouve automatiquement `r .fun("load")`: 
+
+```{r, eval = FALSE}
+# Définition du répertoire de la formation comme répertoire de travail
+setwd("/Users/iMathias/Documents/Taf/GitHub/r_insee/drees/bases")
+
+# Utilisation de la fonction load() sans avoir à indiquer le chemin
+load("module1.RData")
+```
+
+------
+
+```{r, results = "asis", echo = FALSE}
+.souspartie("Importer des fichiers plats avec `read.table()`")
+```
+
+R dispose nativement d'un fonction capable de lire les fichiers dits "plats" (`.txt`, `.csv` ou `.dlm` le plus souvent) : la **fonction `read.table()`**`r .fun("read.table", bold = TRUE)` (taper `? read.table` pour afficher sa page d'aide). Cette fonction comporte un grand nombre de paramètres susceptibles d'être ajustés au format du fichier en entrée : délimiteur, séparateur de décimales, etc.
+
+Afin de faciliter l'utilisation de cette fonction, des fonctions "alias" sont également disponibles qui correspondent à des **versions pré-paramétrées de `read.table()`**. En particulier :
+
+- `read.csv()``r .fun("read.csv", bold = TRUE)` importe des fichiers dont les colonnes sont **séparées par des virgules** ;
+- `read.delim()``r .fun("read.delim", bold = TRUE)` importe des fichiers dont les colonnes sont **séparées par des tabulations**.
+
+Les colonnes du fichier `bpe2.csv` utilisé dans cet exemple sont **séparées par des virgules** (comme ceux des fichiers produits par défaut par LibreOffice Calc) : c'est donc la fonction `read.csv()` qu'il convient d'utiliser :
+```{r}
+# Chargement du fichier bpe2.csv
+bpe2_csv <- read.csv("bpe2.csv")
+# Remarque : le fichier bpe2.csv est dans le répertoire de travail
+# (modifié plus haut à l'aide de setwd()) donc il suffit d'indiquer 
+# son nom pour que R le retrouve. 
+
+# Premières lignes de bpe2_csv
+head(bpe2_csv)
+```
+
+
+```{r, results = "asis", echo = FALSE}
+.souspartie("Importer des fichiers `.dbf` ou `.dta` avec le *package* `foreign`")
+```
+
+Au-delà des fonctions natives de R, plusieurs *packages* permettent d'importer facilement des données dans R, dont le *package* `foreign`. Dans **RStudio**, la sous-fenêtre *Packages* de la fenêtre de visualisation (en bas à droite par défaut) permet d'afficher l'ensemble des *packages* installés avec une description succincte.
+
+![Interface fenêtrée de **RStudio** sous Windows -- Liste des *packages* installés](../figures/rstudio_2.png)
+
+Le *package* `foreign` a la particularité d'être **pré-installé** : pour utiliser ses fonctions, il suffit de le charger avec la fonction `library()` (une fois par session suffit).
+
+```{r}
+# Chargement du package foreign
+library("foreign")
+```
+Dans **RStudio**, cocher la case devant le nom du *package* génère automatiquement une ligne de code équivalente.
+
+\
+
+Dès lors qu'il est chargé, les fonctions d'import de données du *package* `foreign` sont accessibles, par exemple depuis un fichier au format `.dbf` (la plupart des fichiers "détails" mis en ligne sur le site de l'Insee sont des `.dbf` zippés)`r .fun("read.dbf", bold = TRUE)` :
+
+```{r}
+# Chargement du fichier bpe2.dbf
+bpe2_dbf <- read.dbf("/Users/iMathias/Documents/Taf/GitHub/r_insee/drees/bases/bpe2.dbf")
+
+# Premières lignes de bpe2_dbf
+head(bpe2_dbf)
+```
+
+Le package `foreign` permet également d'importer des fichiers `.dta` (fichiers de données Stata), mais aussi d'exporter des fichiers `.dbf` et `.dta` avec les fonctions `write.dbf()``r .fun("write.dbf", bold = TRUE)` et `write.dta()``r .fun("write.dta", bold = TRUE)` respectivement :
+
+```{r}
+# Export du fichier bpe2_dbf en .dta
+write.dta(bpe2_dbf, file = "bpe2.dta")
+# Note : par défaut les fichiers produits par un code R sont
+# créés dans le répertoire de travail.
+```
+
+
+```{r, results = "asis", echo = FALSE}
+.souspartie("Importer des fichiers `.sas7bdat` avec le *package* `haven`")
+```
+
+------
+
+\ 
+
+Si un ** *package* est pré-installé**, il n'est pas nécessaire de le réinstaller. Pour utiliser les fonctionnalités qu'il apporte, **il suffit de le charger avec la fonction** `library()``r .fun("library", bold = TRUE)` (à faire à chaque session de travail avec le *package*) :
+
+```{r}
+# Chargement du package haven
+library(haven)
+# Remarque : A faire à chaque session de travail avec le package
+```
+
+Pour importer des fichiers `.sas7bdat` dans R, il ne reste donc plus qu'à utiliser la fonction `read_sas()``r .fun("read\\_sas", bold = TRUE)` qu'apporte le *package* `haven`.
+
+```{r}
+# Import du fichier bpe2.sas7bdat
+bpe2_sas <- read_sas("bpe2.sas7bdat")
+
+# Premières lignes de bpe2_sas
+head(bpe2_sas)
+```
+
+```{r, results = "asis", echo = FALSE}
+.souspartie("Sauvegarder des données en format R natif")
+```
+
+Une fois des données importées, il est souvent utile de les **sauvegarder sur le disque dur dans un format susceptible d'être lu rapidement par R** à l'aide de la fonction `save()``r .fun("save", bold = TRUE)`. 
+
+La fonction `save()` est le **pendant de la fonction `load()`**. Elle permet de **sauvegarder un ou plusieurs fichiers** que la fonction `load()``r .fun("load")` recharge tels quels (en particulier avec le même nom) dans l'environnement de travail :
+
+```{r}
+# Sauvegarde des fichiers importés dans le fichier bpe2.RData
+save(bpe2_csv, bpe2_sas, file = "bpe2.RData")
+
+# Suppression des fichiers bpe2_csv et bpe2_sas
+rm(bpe2_csv, bpe2_sas)
+ls()
+
+# Chargement du fichier bpe2.RData
+load("bpe2.RData")
+ls()
+```
+
+Les fichiers `.RData` sauvegardés sont **compressés par défaut**, ce qui diminue considérablement leur taille sur le disque. Cette fonction permet aussi de sauvegarder tous les objets d'une sessions, pour être réutilisés plus tard par exemple;
